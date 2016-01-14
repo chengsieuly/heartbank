@@ -1,0 +1,109 @@
+doctype html
+html(ng-app='HeartBankApp')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    title Family
+    link(rel='stylesheet', href='lib/css/bootstrap.min.css')
+    link(rel='stylesheet', href='style.css')
+  body
+    div.container(ng-controller='HeartBankController')
+      p You are currently logged in as
+        strong  #{users.name} (#{users.extension})
+        a(href='/logout')  Logout
+        span(id='surname')
+          img.icons(src='lib/images/paper-icon-family.svg')
+          span #{users.surname} Family
+      form.broadcast-form(ng-submit='processForm()')
+        img.icons(src='lib/images/paper-icon-command.svg')
+        select(id='select', style='width:125px', ng-model='formData.command')
+          option give/transfer
+          option take/transfer
+          option deposit
+          option withdraw
+          option reward
+          option donate       
+        img(src='lib/images/paper-icon-heart.svg')
+        span $
+        input(id='amount', type='number', style='width:60px', min='0.01', step='any', required='true', placeholder='amount', ng-model='formData.amount')
+        img.icons(src='lib/images/paper-icon-ext.svg')
+        input(type='number', style='width:50px', min='0', required='true', placeholder='ext', ng-model='formData.ext')
+        img(src='lib/images/paper-icon-comment.svg')
+        input(name='message', type='text', placeholder='comment', ng-model='formData.comment')
+        label(id='anonymize') <3
+        input(id='checkbox', type='checkbox', ng-model='checked', ng-change='stateChanged()')
+        img.icons(src='lib/images/paper-icon-broadcast.svg')
+        input(id='submit', ng-hide='broadcasting', type='submit', value='Broadcast')
+        input(ng-show='broadcasting', type='text', style='border: none', value='Broadcasting...')
+        br
+        div(ng-if="formData.command==='reward'")
+          img.icons(src='lib/images/heart-not-full.svg')
+          span $
+          input(id='rate', type='number', min='0', step='any', style='width:60px; margin-bottom:5px', placeholder='rate')
+          span per min 
+          br
+          img.icons(src='lib/images/clock.jpg')
+          input(id='time', type='number', min='0', step='any', style='width:60px; margin-left:9px', placeholder='time')
+          span mins
+          span(id='calculate', type='text', style='border: none', value='calculate', ng-click='calculate()') Calculate
+      hr
+      div.col-md-6
+        h3 Transaction History
+        ul(ng-repeat='item in newItems')
+          li(class='newitems')
+            span.new new
+            span  {{item.created_at | date: 'MMMM d, y h:mm a'}}:
+            img.icons-transactions(src='lib/images/paper-icon-command.svg')
+            span {{item.command}}
+            img.icons-transactions(ng-if="item.rate !== '' && item.command === 'reward'", src='lib/images/heart-not-full.svg')
+            span(ng-if="item.rate !== '' && item.command === 'reward'") ${{item.rate}}/min
+            img.icons-transactions(ng-if="item.time !== '' && item.command === 'reward'", src='lib/images/clock.jpg')
+            span(ng-if="item.time !== '' && item.command === 'reward'") {{item.time}} mins
+            img.icons-transactions(src='lib/images/paper-icon-heart.svg')
+            span ${{item.amount}}
+            img.icons-transactions(src='lib/images/paper-icon-ext.svg')
+            span {{item.ext}}
+            img.icons-transactions(src='lib/images/paper-icon-comment.svg')
+            span {{item.comment}}
+            span  {{item.anonymize}}
+        ul(id='transactions')
+          each transaction, i in transactions
+            li
+              span #{moment(transaction.created_at).tz('America/Los_Angeles').format('LLL')}:
+              img.icons-transactions(src='lib/images/paper-icon-command.svg')
+              span #{transaction.command}
+              if transaction.command == 'reward' & transaction.rate !== null
+                img.icons-transactions(src='lib/images/heart-not-full.svg')
+                span $#{transaction.rate}/min
+              if transaction.command == 'reward' & transaction.time !== null
+                img.icons-transactions(src='lib/images/clock.jpg')
+                span #{transaction.time} mins
+              img.icons-transactions(src='lib/images/paper-icon-heart.svg')
+              span $#{transaction.amount}
+              img.icons-transactions(src='lib/images/paper-icon-ext.svg')
+              span #{transaction.ext}
+              img.icons-transactions(src='lib/images/paper-icon-comment.svg')
+              span #{transaction.comment}
+              span  #{transaction.anonymize}
+      div.col-md-4
+      div.col-md-2(id='right')
+        h3 Online Users
+        ul(id='users')
+        div(id='chatbox')
+          ul(id='messages')
+            each message in messages
+              li #{message.user} 
+                span.chat-time (#{moment(message.created_at).tz('America/Los_Angeles').format('h:mm A')})
+                span : #{message.msg}
+        br
+        form(id='chat')
+          input(id='m', autocomplete='off')
+          button Send
+    
+    script(src='lib/js/angular.min.js')
+    script(src='lib/js/angular-route.min.js')
+    script(src='lib/js/angular-cookies.min.js')
+    script(src='lib/js/jquery-1.11.3.min.js')
+    script(src='/socket.io/socket.io.js')
+    script(src='app.js')
